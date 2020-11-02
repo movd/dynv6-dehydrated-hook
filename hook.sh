@@ -120,10 +120,17 @@ deploy_challenge_dynv6() {
 
   # check dns propagation # https://github.com/o1oo11oo/dehydrated-all-inkl-hook/blob/master/hook.sh
   _echo "DNS entry added successfully, waiting for propagation..."
-  end=$((SECONDS+10))
-  while ! [ dig TXT +trace +noall +answer "_acme-challenge.${DOMAIN}" | grep -q "${TOKEN_VALUE}" ] | [ $SECONDS -lt $end ]; do
+  i=1
+  while ! dig TXT +trace +noall +answer "_acme-challenge.${DOMAIN}" | grep -q "${TOKEN_VALUE}"; do
+    # abort propagation check after 10 seconds
     sleep 1
+    ((i++))
+    if ((i > 9)); then
+      break
+    fi
   done
+
+
 }
 
 clean_challenge_dynv6() {
