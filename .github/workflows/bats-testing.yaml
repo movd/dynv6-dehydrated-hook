@@ -1,0 +1,37 @@
+name: "Test pushed commit with Bats"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.sh"
+      - "**/*.bah"
+      - "**/*.bats"
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  SECRET_DYNV6_TOKEN: ${{ secrets.SECRET_DYNV6_TOKEN }}
+  SECRET_DYNV6_ZONEID: ${{ secrets.SECRET_DYNV6_ZONEID }}
+  SECRET_DYNV6_TEST_DOMAIN: ${{ secrets.SECRET_DYNV6_TEST_DOMAIN }}
+  
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Github Checkout with submodules
+        uses: actions/checkout@v2
+        with:
+           submodules: true
+      
+      - name: Install packages and test dig
+        run: |- 
+          sudo apt-get install jq dnsutils -y &&
+          dig _acme-challenge.$SECRET_DYNV6_TEST_DOMAIN TXT
+      
+      - name: Run Bats tests
+        run: |-
+          ./test/hook.bats -t
