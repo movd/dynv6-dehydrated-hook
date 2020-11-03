@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)" 
-HOOK=${1}
 DOMAIN=${2}
 TOKEN_VALUE=${4}
 DYNV6_DOMAINS=(dns.army dns.navy dynv6.net v6.army v6.navy v6.rocks) # TODO: Make this dynamic
@@ -22,7 +21,7 @@ _test_echo() {
 }
 
 set_environment() {
-  _test_echo ${ENV}
+  _test_echo "${ENV}"
 }
 
 # Print error message and exit with error (taken straight from dehydrated)
@@ -42,15 +41,16 @@ check_dependencies_and_config() {
     # if env variables not set source .env file as config
     # load .env https://stackoverflow.com/a/30969768 and check
     set -o allexport
-    source ${DIR}/${ENV}.env 2>/dev/null || _exiterr "${DIR}/${ENV}.env is not available!" &&
+    # shellcheck disable=SC1090
+    source "${DIR}/${ENV}.env" 2>/dev/null || _exiterr "${DIR}/${ENV}.env is not available!" &&
     set +o allexport
-    [[ ! -z "${DYNV6_TOKEN}" ]] || _exiterr "Environment variable DYNV6_TOKEN is empty!" &&
-    [[ ! -z "${DYNV6_ZONEID}" ]] || _exiterr "Environment variable DYNV6_ZONEID is empty!"
+    [[ -n "${DYNV6_TOKEN}" ]] || _exiterr "Environment variable DYNV6_TOKEN is empty!"
+    [[ -n "${DYNV6_ZONEID}" ]] || _exiterr "Environment variable DYNV6_ZONEID is empty!"
   fi
 }
 
 check_if_dynv6_domain() {
-  my_domain=${@}
+  my_domain=${1}
   for dynv6_domain in "${DYNV6_DOMAINS[@]}"
   do
     # echo ${dynv6_domain}
@@ -63,11 +63,12 @@ check_if_dynv6_domain() {
 }
 
 create_acme_challenge_host() { 
-  my_domain=${@}
-  check_if_dynv6_domain $my_domain
+  my_domain=${1}
+  check_if_dynv6_domain "${my_domain}"
 
   # Set IFS to dot, so that we can split $@ on dots instead of spaces.
   local IFS='.'
+  # shellcheck disable=SC2206
   zones=($@)
   # strip root domain from $DOMAIN and only leave sub-domains
   # turns www.animals.example.com into "www animals" (remove last 2 items)
@@ -81,7 +82,7 @@ create_acme_challenge_host() {
     num_elements_to_remove=3
   fi
 
-  domain_and_subdomains=$(echo "${zones[@]::${#zones[@]}-$num_elements_to_remove}") 
+  domain_and_subdomains="${zones[*]::${#zones[*]}-$num_elements_to_remove}"
   acme_challenge_hostname=$(echo "_acme-challenge.${domain_and_subdomains}" | sed 's/ /./g')
   if [[ $acme_challenge_hostname == "_acme-challenge." ]]; then
     # if wildcard on base level then just:
@@ -94,7 +95,7 @@ create_acme_challenge_host() {
 
 test_dynv6_connection() {
   # test connection to dynv6 api
-  test_connection_status_code=$(curl -s -o /dev/null -I -w "%{http_code}" -X GET -H "Authorization: Bearer ${DYNV6_TOKEN}" ${DYNV6_APIBASE}/${DYNV6_ZONEID}/records)
+  test_connection_status_code=$(curl -s -o /dev/null -I -w "%{http_code}" -X GET -H "Authorization: Bearer ${DYNV6_TOKEN}" ${DYNV6_APIBASE}/"${DYNV6_ZONEID}"/records)
   if ! [[ $test_connection_status_code = "200" ]]; then
     [[ "$test_connection_status_code" == "401" ]] && _exiterr "Error 401: Unauthorized"
     [[ "$test_connection_status_code" == "403" ]] && _exiterr "Error 403: Forbidden. Check your DYNV6_TOKEN"
@@ -104,14 +105,14 @@ test_dynv6_connection() {
 }
 
 deploy_challenge_dynv6() {
-  create_acme_challenge_host $DOMAIN
+  create_acme_challenge_host "${DOMAIN}"
 
   _echo "Deploying Token to dynv6.com for \"${DOMAIN}\""
   json='{"name":"'"$acme_challenge_hostname"'","data":"'$TOKEN_VALUE'","type":"TXT"}'
   _echo "Sending payload to dynv6.com: ${json}"
 
-  res=$(curl -s -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${DYNV6_TOKEN}" -d "$json" ${DYNV6_APIBASE}/${DYNV6_ZONEID}/records)
-  record_id=$(echo ${res} | jq -r '.id')
+  res=$(curl -s -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${DYNV6_TOKEN}" -d "$json" ${DYNV6_APIBASE}/"${DYNV6_ZONEID}"/records)
+  record_id=$(echo "${res}"| jq -r '.id')
 
   re='^[0-9]+$'
   if ! [[ $record_id =~ $re ]]; then
@@ -134,18 +135,18 @@ deploy_challenge_dynv6() {
 }
 
 clean_challenge_dynv6() {
-  create_acme_challenge_host $DOMAIN
+  create_acme_challenge_host "${DOMAIN}"
    # always dump all records of zone to $all_records
-  all_records=$(curl -s -X GET -H "Accept: application/json" -H "Authorization: Bearer ${DYNV6_TOKEN}" ${DYNV6_APIBASE}/${DYNV6_ZONEID}/records)
+  all_records=$(curl -s -X GET -H "Accept: application/json" -H "Authorization: Bearer ${DYNV6_TOKEN}" ${DYNV6_APIBASE}/"${DYNV6_ZONEID}"/records)
 
   # get recordIDs of all names _acme-challenge hostnames matching the given
-  acme_challenge_record_ids=$(echo $all_records | jq -r --arg name "$acme_challenge_hostname" 'map(select((.name == $name ))) | .[].id')
+  acme_challenge_record_ids=$(echo "${all_records}" | jq -r --arg name "$acme_challenge_hostname" 'map(select((.name == $name ))) | .[].id')
 
-  if ! [ -z "$acme_challenge_record_ids" ]; then
+  if [ -n "$acme_challenge_record_ids" ]; then
       # is not empty delete
       _echo "Cleaning up challenge responses for \"${DOMAIN}\" ..."
       for record_id in $acme_challenge_record_ids; do
-      res=$(curl -s -o /dev/null -I -w "%{http_code}" -X DELETE -H "Authorization: Bearer ${DYNV6_TOKEN}" ${DYNV6_APIBASE}/${DYNV6_ZONEID}/records/${record_id})
+      res=$(curl -s -o /dev/null -I -w "%{http_code}" -X DELETE -H "Authorization: Bearer ${DYNV6_TOKEN}" ${DYNV6_APIBASE}/"${DYNV6_ZONEID}"/records/"${record_id}")
       if ! [[ $res = "204" ]]; then
         _exiterr "Could not delete record got status code ${res} instead of 204"
       else
@@ -186,10 +187,9 @@ then
         # do nothing for now
         ;;
   esac
-
+  # shellcheck disable=SC2181
   if [ $? -gt 0 ]
   then
-    echo $ENV
     exit 1
   fi
 fi
