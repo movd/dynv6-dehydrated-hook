@@ -18,10 +18,9 @@ env:
   SECRET_DYNV6_TEST_DOMAIN: ${{ secrets.SECRET_DYNV6_TEST_DOMAIN }}
   
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  unit-integration-tests:
+    runs-on: ubuntu-20.04
     steps:
-
       - name: Github Checkout with submodules
         uses: actions/checkout@v2
         with:
@@ -32,6 +31,22 @@ jobs:
           sudo apt-get install jq dnsutils -y &&
           dig _acme-challenge.$SECRET_DYNV6_TEST_DOMAIN TXT
       
-      - name: Run Bats tests
+      - name: Run Unit and Integration tests with Bats
         run: |-
           ./test/hook.bats -t
+
+  e2e-tests:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Github Checkout with submodules
+        uses: actions/checkout@v2
+        with:
+           submodules: true
+
+      - name: Install packages 
+        run: |- 
+          sudo apt-get install jq dnsutils tree
+      
+      - name: Run End-to-end with Bats and dehydrated
+        run: |-
+          ./test/e2e.bats -t

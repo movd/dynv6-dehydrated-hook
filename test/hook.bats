@@ -84,7 +84,7 @@ function teardown() {
 }
 
 
-@test 'test the test_dynv6_connection function' {
+@test 'test the test_dynv6_connection function 🙃' {
   # wrong zoneid results in 'not found'
   # right token, wrong zone
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
