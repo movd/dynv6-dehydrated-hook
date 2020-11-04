@@ -73,8 +73,10 @@ Processing io.example.com with alternative names: *.io.example.com
 
 ## How to Contribute
 
-We welcome issues to and pull requests against this repository!
+I welcome issues to and pull requests against this repository!
 
-Thanks to:
-* https://github.com/o1oo11oo/dehydrated-all-inkl-hook (check dns propagation with `dig`)
+## License
 
+This script itself is released under a MIT License. 
+
+When running, the script downloads the great [Public Suffix List](https://github.com/publicsuffix/list), which is maintained by the Mozilla Foundation and maintainers. The list is released under a Mozilla Public License 2.0.
