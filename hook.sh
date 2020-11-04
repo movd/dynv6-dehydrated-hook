@@ -6,8 +6,8 @@ DYNV6_DOMAINS=(dns.army dns.navy dynv6.net v6.army v6.navy v6.rocks) # TODO: Mak
 DYNV6_APIBASE="https://dynv6.com/api/v2/zones"
 DYNV6_TOKEN=${DYNV6_TOKEN}
 DYNV6_ZONEID=${DYNV6_ZONEID}
-is_dynv6_domain="false"
-domain_and_subdomains=""
+list_filename="public_suffix_list_sorted.dat"
+list_full_path="${DIR}/${list_filename}"
 record_id=""
 
 _echo() {
@@ -49,47 +49,56 @@ check_dependencies_and_config() {
   fi
 }
 
-check_if_dynv6_domain() {
-  my_domain=${1}
-  for dynv6_domain in "${DYNV6_DOMAINS[@]}"
-  do
-    # echo ${dynv6_domain}
-    if [[ "$my_domain" == *"$dynv6_domain" ]]; then
-      is_dynv6_domain=true
-    fi
-  done
+get_publicsuffix_list() {
+  # The Mozilla Foundation maintains a Public Suffix List for effective top-level domains, (for example .co.uk instead of .uk)
+  # https://publicsuffix.org/list/public_suffix_list.dat
+  # Download only if not older than 7 days
 
-  _test_echo "is_dynv6_domain=${is_dynv6_domain}"
+  do_download() {
+    curl -sL "https://publicsuffix.org/list/public_suffix_list.dat" --output /tmp/public_suffix_list.dat &&
+
+    # add all dynv6.com endings to this list 
+    for dynv6_domain in "${DYNV6_DOMAINS[@]}"
+    do
+      echo "${dynv6_domain}" >> /tmp/public_suffix_list.dat
+    done
+
+    grep -v "//" /tmp/public_suffix_list.dat \
+    | sed '/^[[:space:]]*$/d' \
+    | sort \
+    > "${list_full_path}"
+    echo "Downloaded publicsuffix.org list to '${list_full_path}'" &&
+    rm -rf /tmp/public_suffix_list.dat
+  }
+
+  if [[ $(find "${DIR}" -iname "${list_filename}" -type f -mtime +7 -print) ]]; then
+    echo "File '${list_filename}' exists and is older than 7 days."
+    do_download
+  fi
+
+  if ! [[ $(find "${DIR}" -iname "${list_filename}" -type f -print) ]]; then
+    echo "File '${list_filename}' does not exist."
+    do_download
+  fi
 }
 
 create_acme_challenge_host() { 
-  my_domain=${1}
-  check_if_dynv6_domain "${my_domain}"
-
-  # Set IFS to dot, so that we can split $@ on dots instead of spaces.
-  local IFS='.'
-  # shellcheck disable=SC2206
-  zones=($@)
-  # strip root domain from $DOMAIN and only leave sub-domains
-  # turns www.animals.example.com into "www animals" (remove last 2 items)
-  # turns *.pets.animals.example.com into "* pets animals" (remove last 2 items)
-  # turns animals.dynv6.net into " " (remove last 3 items)
-  # turns cats.animals.dynv6.net into "cats" (remove last 3 items)
-  # https://stackoverflow.com/a/54683506
-  # https://stackoverflow.com/a/44939917
-  num_elements_to_remove=2
-  if [ "$is_dynv6_domain" = true ] ; then
-    num_elements_to_remove=3
+  # split domain into array
+  local my_domain="${1}"
+  IFS='.' read -r -a array <<< "${my_domain}"
+  for (( i=0; i<${#array[@]}; i++ )); do
+  # iterate trough array and remove the $i element from front
+  check_var=${array[*]:$i} 
+  part_to_check="${check_var// /.}"
+  if grep -q "${part_to_check}" "${list_full_path}"; then
+    # echo "${part_to_check} is a public suffix"
+    # this turns leela.fry.bender.example.org.za into '_acme-challenge.leela.fry.bender'
+    acme_challenge_hostname="_acme-challenge.$(echo "${my_domain}" | sed s/"${part_to_check}"// | sed s/"${array[$i-1]}."//)"
+    break
   fi
+  done
 
-  domain_and_subdomains="${zones[*]::${#zones[*]}-$num_elements_to_remove}"
-  acme_challenge_hostname=$(echo "_acme-challenge.${domain_and_subdomains}" | sed 's/ /./g')
-  if [[ $acme_challenge_hostname == "_acme-challenge." ]]; then
-    # if wildcard on base level then just:
-    acme_challenge_hostname="_acme-challenge"
-  fi
-
-  _test_echo "${acme_challenge_hostname}"
+  _test_echo "${acme_challenge_hostname: :-1}" # remove last dot
 }
 
 

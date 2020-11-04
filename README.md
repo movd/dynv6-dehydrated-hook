@@ -9,13 +9,13 @@ dynv6.com is an entirely free dynamic DNS provider that supports both IPv4 and I
 ## What's working?
 
 This script should work with:
-- Subdomains that end with domains owned by dynv6.com (`dns.army, dns.navy, dynv6.net, v6.army, v6.navy, v6.rocks`)
-- A top-level domains that you delegated to dynv6.com 
-- Limitations: 
-  - You must set up the delegated domain as a single zone 
 
-## What's not yet working?
-- Second-level domains like `example.co.uk` or `example.org.za` don't work yet
+✅ Subdomains that end with domains owned by dynv6.com (`dns.army, dns.navy, dynv6.net, v6.army, v6.navy, v6.rocks`)
+
+✅ Top-level domain that you delegated to dynv6.com 
+
+- Limitations: 
+  - You must set up the delegated domain as a single zone
 
 ## Usage/Setup
 

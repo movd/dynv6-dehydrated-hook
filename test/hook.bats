@@ -50,39 +50,54 @@ function teardown() {
 
   run check_if_dynv6_domain "fry.dns.navy"
   assert_success
-  assert_output --partial "is_dynv6_domain=true"
+  assert_output "is_dynv6_domain=true"
 
   run check_if_dynv6_domain "example.com"
   assert_success
-  assert_output --partial "is_dynv6_domain=false"
+  assert_output "is_dynv6_domain=false"
 
   run check_if_dynv6_domain "www.example.com"
   assert_success
-  assert_output --partial "is_dynv6_domain=false"
+  assert_output "is_dynv6_domain=false"
 }
 
-@test ''_acme-challenge...' name part of api payload gets created the right way' {
+@test 'unit: 'example.dynv6.net' results in name='_acme-challenge'' {
   # '${SECRET_DYNV6_TEST_DOMAIN}' results in name: '_acme-challenge'
-  run create_acme_challenge_host "${SECRET_DYNV6_TEST_DOMAIN}"
+  run create_acme_challenge_host "example.dynv6.net"
   assert_success
-  assert_output --partial "_acme-challenge"
+  assert_line --index 0 "_acme-challenge"
+}
 
+@test 'unit: 'leela.example.dynv6.net' results in name='_acme-challenge.leela'' {
   # fry.${SECRET_DYNV6_TEST_DOMAIN}' results in name: '_acme-challenge.fry'
-  run create_acme_challenge_host "fry.${SECRET_DYNV6_TEST_DOMAIN}"
+  run create_acme_challenge_host "leela.example.dynv6.net"
   assert_success
-  assert_output --partial "_acme-challenge.fry"
+  assert_line --index 0 "_acme-challenge.leela"
+}
 
-  # 'example.com' results in name: '_acme-challenge'
+@test 'unit: 'example.com' results in name='_acme-challenge'' {
   run create_acme_challenge_host "example.com"
   assert_success
-  assert_output --partial "_acme-challenge"
-
-  # 'fry.example.com' results in name: '_acme-challenge.fry'' 
-  run create_acme_challenge_host "fry.example.com"
-  assert_success
-  assert_output --partial "_acme-challenge.fry"
+  assert_line --index 0 "_acme-challenge"
 }
 
+@test 'unit: 'fry.example.com' results in name='_acme-challenge.fry'' { 
+  run create_acme_challenge_host "fry.example.com"
+  assert_success
+  assert_line --index 0 "_acme-challenge.fry"
+}
+
+@test 'unit: 'example.org.za' results in name='_acme-challenge'' {
+  run create_acme_challenge_host "example.org.za"
+  assert_success
+  assert_line --index 0 "_acme-challenge"
+}
+
+@test 'unit: 'bender.example.org.za' results in name='_acme-challenge.bender'' { 
+  run create_acme_challenge_host "bender.example.org.za"
+  assert_success
+  assert_line --index 0 "_acme-challenge.bender"
+}
 
 @test 'test the test_dynv6_connection function 🙃' {
   # wrong zoneid results in 'not found'

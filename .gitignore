@@ -3,3 +3,4 @@
 .notes
 test/e2e
 .DS_Store
+public_suffix_list*
