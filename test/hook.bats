@@ -42,6 +42,12 @@ function teardown() {
   assert_output --partial "DYNV6_ZONEID is empty"
 }
 
+@test 'download the public suffix list' {
+    run get_publicsuffix_list
+    assert_success
+    assert_file_exist "${base_dir}/public_suffix_list_sorted.dat"
+}
+
 @test 'unit: 'example.dynv6.net' results in name='_acme-challenge'' {
   # '${SECRET_DYNV6_TEST_DOMAIN}' results in name: '_acme-challenge'
   run create_acme_challenge_host "example.dynv6.net"
