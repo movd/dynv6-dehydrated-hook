@@ -45,7 +45,7 @@ jobs:
 
       - name: Install packages 
         run: |- 
-          sudo apt-get install jq dnsutils tree
+          sudo apt-get install jq dnsutils
       
       - name: Run End-to-end with Bats and dehydrated
         run: |-

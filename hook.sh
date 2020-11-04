@@ -67,17 +67,17 @@ get_publicsuffix_list() {
     | sed '/^[[:space:]]*$/d' \
     | sort \
     > "${list_full_path}"
-    echo "Downloaded publicsuffix.org list to '${list_full_path}'" &&
+    _echo "Downloaded publicsuffix.org list to '${list_full_path}'" &&
     rm -rf /tmp/public_suffix_list.dat
   }
 
   if [[ $(find "${DIR}" -iname "${list_filename}" -type f -mtime +7 -print) ]]; then
-    echo "File '${list_filename}' exists and is older than 7 days."
+    _echo "File '${list_filename}' exists and is older than 7 days."
     do_download
   fi
 
   if ! [[ $(find "${DIR}" -iname "${list_filename}" -type f -print) ]]; then
-    echo "File '${list_filename}' does not exist."
+    _echo "File '${list_filename}' does not exist."
     do_download
   fi
 }

@@ -19,6 +19,7 @@ setup() {
   run run_main
   assert_success
   assert_output --partial 'e2e: downloaded dehydrated'
+  assert_output --partial 'Downloaded publicsuffix.org list'
   assert_output --partial 'Creating chain cache directory'
   assert_output --partial 'Creating new directory'
   assert_output --partial 'DNS entry added successfully, waiting for propagation...'

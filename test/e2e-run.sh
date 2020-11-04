@@ -9,8 +9,9 @@ rm -rf "${path_to_e2e_base_dir}"
 mkdir -p "${path_to_conf_base_dir}"
 
 run_main () {
-# download and setup hook.sh
-curl -sL https://raw.githubusercontent.com/movd/dynv6-dehydrated-hook/main/hook.sh --output "${path_to_conf_base_dir}"/hook.sh
+# copy hook.sh to conf_dir
+cp --verbose "$(dirname "${DIR}")"/hook.sh "${path_to_conf_base_dir}"/hook.sh
+chmod +x "${path_to_conf_base_dir}"/hook.sh
 
 cat <<EOF > "${path_to_conf_base_dir}/.env"
 DYNV6_TOKEN="${SECRET_DYNV6_TOKEN}"
