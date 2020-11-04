@@ -93,12 +93,12 @@ create_acme_challenge_host() {
   if grep -q "${part_to_check}" "${list_full_path}"; then
     # echo "${part_to_check} is a public suffix"
     # this turns leela.fry.bender.example.org.za into '_acme-challenge.leela.fry.bender'
-    acme_challenge_hostname="_acme-challenge.$(echo "${my_domain}" | sed s/"${part_to_check}"// | sed s/"${array[$i-1]}."//)"
+    acme_challenge_hostname_with_dot="_acme-challenge.$(echo "${my_domain}" | sed s/"${part_to_check}"// | sed s/"${array[$i-1]}."// | sed s/"*."//)"
     break
   fi
   done
-
-  _test_echo "${acme_challenge_hostname: :-1}" # remove last dot
+  acme_challenge_hostname="${acme_challenge_hostname_with_dot: :-1}"  # remove last dot
+  _test_echo "${acme_challenge_hostname}"
 }
 
 
@@ -177,6 +177,7 @@ then
   run_main
   case "$1" in
     "deploy_challenge")
+        get_publicsuffix_list
         deploy_challenge_dynv6
         ;;
     "clean_challenge")

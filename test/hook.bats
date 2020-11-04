@@ -42,25 +42,6 @@ function teardown() {
   assert_output --partial "DYNV6_ZONEID is empty"
 }
 
-@test 'check if a subdomains that is owned by dynv6.com get detected as such' {
-  # echo '# DYNV6_DOMAINS: ' $DYNV6_DOMAINS >&3
-  run check_if_dynv6_domain "${SECRET_DYNV6_TEST_DOMAIN}"
-  assert_success
-  assert_output "is_dynv6_domain=true"
-
-  run check_if_dynv6_domain "fry.dns.navy"
-  assert_success
-  assert_output "is_dynv6_domain=true"
-
-  run check_if_dynv6_domain "example.com"
-  assert_success
-  assert_output "is_dynv6_domain=false"
-
-  run check_if_dynv6_domain "www.example.com"
-  assert_success
-  assert_output "is_dynv6_domain=false"
-}
-
 @test 'unit: 'example.dynv6.net' results in name='_acme-challenge'' {
   # '${SECRET_DYNV6_TEST_DOMAIN}' results in name: '_acme-challenge'
   run create_acme_challenge_host "example.dynv6.net"
@@ -81,8 +62,20 @@ function teardown() {
   assert_line --index 0 "_acme-challenge"
 }
 
+@test 'unit: '*.example.com' results in name='_acme-challenge'' {
+  run create_acme_challenge_host "*.example.com"
+  assert_success
+  assert_line --index 0 "_acme-challenge"
+}
+
 @test 'unit: 'fry.example.com' results in name='_acme-challenge.fry'' { 
-  run create_acme_challenge_host "fry.example.com"
+  run create_acme_challenge_host "*.fry.example.com"
+  assert_success
+  assert_line --index 0 "_acme-challenge.fry"
+}
+
+@test 'unit: '*.fry.example.com' results in name='_acme-challenge.fry'' { 
+  run create_acme_challenge_host "*.fry.example.com"
   assert_success
   assert_line --index 0 "_acme-challenge.fry"
 }
@@ -93,8 +86,20 @@ function teardown() {
   assert_line --index 0 "_acme-challenge"
 }
 
+@test 'unit: '*.example.org.za' results in name='_acme-challenge'' {
+  run create_acme_challenge_host "*.example.org.za"
+  assert_success
+  assert_line --index 0 "_acme-challenge"
+}
+
 @test 'unit: 'bender.example.org.za' results in name='_acme-challenge.bender'' { 
   run create_acme_challenge_host "bender.example.org.za"
+  assert_success
+  assert_line --index 0 "_acme-challenge.bender"
+}
+
+@test 'unit: '*.bender.example.org.za' results in name='_acme-challenge.bender'' { 
+  run create_acme_challenge_host "*.bender.example.org.za"
   assert_success
   assert_line --index 0 "_acme-challenge.bender"
 }
@@ -187,4 +192,21 @@ function teardown() {
   assert_success
 }
 
+@test 'integration test: deploy challenge response token for a dynv6.net wildcard (*.example.dynv6.net)' {
+  export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
+  export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
+  output=$(${hook_script} deploy_challenge *.${SECRET_DYNV6_TEST_DOMAIN} null hook_token) #TODO GITHUBSECRET 
+  run echo "${output}"
+  assert_output --partial 'DNS entry added successfully'
+  assert_output --partial '{"name":"_acme-challenge","data":"hook_token","type":"TXT"}'
+}
+
+@test 'integration test: clean challenge response token for a dynv6.net wildcard (*.example.dynv6.net)' {
+  export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
+  export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
+  output=$(${hook_script} clean_challenge *.${SECRET_DYNV6_TEST_DOMAIN}) #TODO GITHUBSECRET 
+  run echo "${output}"
+  assert_output --partial "Successfully deleted token at dynv6.com"
+  assert_success
+}
 
