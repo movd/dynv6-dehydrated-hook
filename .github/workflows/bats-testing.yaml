@@ -33,7 +33,7 @@ jobs:
       
       - name: Run Unit and Integration tests with Bats
         run: |-
-          ./test/hook.bats -t
+          sleep 120 && ./test/hook.bats -t
 
   e2e-tests:
     runs-on: ubuntu-20.04

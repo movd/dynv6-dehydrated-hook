@@ -19,7 +19,7 @@ function teardown() {
 }
 
 # test check_dependencies_and_config
-@test 'exit with missing or wrong .env file' {
+@test 'unit: exit with missing or wrong .env file' {
   # abort if empty .env
   echo "DYNV6_ZONEID=123456" >  ${base_dir}/${ENV}.env
   assert_file_exist ${base_dir}/${ENV}.env
@@ -42,7 +42,7 @@ function teardown() {
   assert_output --partial "DYNV6_ZONEID is empty"
 }
 
-@test 'download the public suffix list' {
+@test 'unit: download the public suffix list' {
     run get_publicsuffix_list
     assert_success
     assert_file_exist "${base_dir}/public_suffix_list_sorted.dat"
@@ -110,7 +110,7 @@ function teardown() {
   assert_line --index 0 "_acme-challenge.bender"
 }
 
-@test 'test the test_dynv6_connection function 🙃' {
+@test 'unit: test the test_dynv6_connection function 🙃' {
   # wrong zoneid results in 'not found'
   # right token, wrong zone
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
@@ -127,7 +127,7 @@ function teardown() {
   assert_success
 }
 
-@test 'unit test: deploy challenge response token for a dynv6.net domain (example.dynv6.net)' {
+@test 'unit: deploy challenge response token for a dynv6.net domain (example.dynv6.net)' {
   # right token, wrong zone
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
   export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
@@ -139,7 +139,7 @@ function teardown() {
   assert_success
 }
 
-@test 'unit test: deploy challenge response token for a dynv6.net subdomain (foo.example.dynv6.net)' {
+@test 'unit: deploy challenge response token for a dynv6.net subdomain (foo.example.dynv6.net)' {
   # right token, wrong zone
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
   export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
@@ -151,7 +151,7 @@ function teardown() {
   assert_success
 }
 
-@test 'unit test: clean challenge response token for a dynv6.net subdomain (foo.example.dynv6.net)' {
+@test 'unit: clean challenge response token for a dynv6.net subdomain (foo.example.dynv6.net)' {
   # right token, wrong zone
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
   export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
@@ -161,56 +161,46 @@ function teardown() {
   assert_success
 }
 
-@test 'integration test: deploy challenge response token for a dynv6.net domain (foo.example.dynv6.net)' {
+@test 'integration: deploy challenge response token for a dynv6.net subdomain (integration.example.dynv6.net)' {
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
   export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
-  output=$(${hook_script} deploy_challenge ${SECRET_DYNV6_TEST_DOMAIN} null hook_token) #TODO GITHUBSECRET 
-  run echo "${output}"
-  assert_output --partial 'DNS entry added successfully'
-  assert_output --partial '{"name":"_acme-challenge","data":"hook_token","type":"TXT"}'
-}
-
-@test 'integration test: clean challenge response token for a dynv6.net domain (example.dynv6.net)' {
-  export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
-  export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
-  output=$(${hook_script} clean_challenge ${SECRET_DYNV6_TEST_DOMAIN}) #TODO GITHUBSECRET 
-  run echo "${output}"
-  assert_output --partial "Successfully deleted token at dynv6.com"
-  assert_success
-}
-
-@test 'integration test: deploy challenge response token for a dynv6.net subdomain (example.dynv6.net)' {
-  export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
-  export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
-  output=$(${hook_script} deploy_challenge integration.${SECRET_DYNV6_TEST_DOMAIN} null hook_token) #TODO GITHUBSECRET 
+  output=$(${hook_script} deploy_challenge integration.${SECRET_DYNV6_TEST_DOMAIN} null hook_token) 
   run echo "${output}"
   assert_output --partial 'DNS entry added successfully'
   assert_output --partial '{"name":"_acme-challenge.integration","data":"hook_token","type":"TXT"}'
 }
 
-
-@test 'integration test: clean challenge response token for a dynv6.net subdomain (foo.example.dynv6.net)' {
+@test 'integration: clean challenge response token for a dynv6.net subdomain (integration.example.dynv6.net)' {
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
   export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
-  output=$(${hook_script} clean_challenge integration.${SECRET_DYNV6_TEST_DOMAIN}) #TODO GITHUBSECRET 
+  output=$(${hook_script} clean_challenge integration.${SECRET_DYNV6_TEST_DOMAIN}) 
   run echo "${output}"
   assert_output --partial "Successfully deleted token at dynv6.com"
   assert_success
 }
 
-@test 'integration test: deploy challenge response token for a dynv6.net wildcard (*.example.dynv6.net)' {
+@test 'integration: deploy challenge response token for a dynv6.net domain (example.dynv6.net)' {
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
   export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
-  output=$(${hook_script} deploy_challenge *.${SECRET_DYNV6_TEST_DOMAIN} null hook_token) #TODO GITHUBSECRET 
+  output=$(${hook_script} deploy_challenge ${SECRET_DYNV6_TEST_DOMAIN} null hook_token) 
   run echo "${output}"
   assert_output --partial 'DNS entry added successfully'
   assert_output --partial '{"name":"_acme-challenge","data":"hook_token","type":"TXT"}'
 }
 
-@test 'integration test: clean challenge response token for a dynv6.net wildcard (*.example.dynv6.net)' {
+@test 'integration: deploy challenge response token for a dynv6.net wildcard (*.example.dynv6.net)' {
   export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
   export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
-  output=$(${hook_script} clean_challenge *.${SECRET_DYNV6_TEST_DOMAIN}) #TODO GITHUBSECRET 
+  output=$(${hook_script} deploy_challenge *.${SECRET_DYNV6_TEST_DOMAIN} null hook_token) 
+  run echo "${output}"
+  assert_output --partial 'DNS entry added successfully'
+  assert_output --partial '{"name":"_acme-challenge","data":"hook_token","type":"TXT"}'
+}
+
+@test 'integration: clean challenge response token for a dynv6.net wildcard (*.example.dynv6.net)' {
+  export DYNV6_TOKEN=${SECRET_DYNV6_TOKEN}
+  export DYNV6_ZONEID=${SECRET_DYNV6_ZONEID}
+  output=$(${hook_script} clean_challenge *.${SECRET_DYNV6_TEST_DOMAIN}) 
   run echo "${output}"
   assert_output --partial "Successfully deleted token at dynv6.com"
   assert_success
