@@ -25,6 +25,8 @@ First, clone this repo or download `hook.sh` directly. Afterward, set your hook 
 HOOK="${BASEDIR}/dynv6-dehydrated-hook/hook.sh"
 ```
 
+This script requires `jq` and `dnsutils`.
+
 ## Example run:
 
 Barebones dehydrated config:
