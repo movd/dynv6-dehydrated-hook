@@ -25,6 +25,26 @@ First, clone this repo or download `hook.sh` directly. Afterward, set your hook 
 HOOK="${BASEDIR}/dynv6-dehydrated-hook/hook.sh"
 ```
 
+### Create configuration file
+
+To use this hook, you need to supply an API key and Zone ID. You can get both from the dynv6.com backend.
+
+Get API Key:
+- Go to https://dynv6.com/keys and log in with your credentials
+- View your default token or create a new one: "🔍 Details"
+
+Get Zone ID:
+- Click "My Zones" -> example.dynv6.net 
+- You can now get the zone from the URL. For example, the ID of the domain https://dynv6.com/zones/123456 is `123456`
+
+You must create a `.env` file and put it in the same folder as the `hook.sh`:
+
+For example:
+```sh
+DYNV6_TOKEN=aWd-YQFncZkN1U5WKiLF1XnZCL2WLR
+DYNV6_ZONEID=123456
+```
+
 This script requires `jq` and `dnsutils`.
 
 ## Example run:
@@ -39,31 +59,36 @@ HOOK="/var/lib/dehydrated/dynv6-dehydrated-hook/hook.sh"
 
 A successful certification process looks like this:
 
-```sh
-$ sudo -u dehydrated /usr/bin/dehydrated -c -f /path/to/dehydrated_base_dir/config
-Processing io.example.com with alternative names: *.io.example.com
- + Creating new directory /path/to/dehydrated_base_dir/certs/io.example.com ...
+<details>
+<summary>View log (click to expand)</summary>
+<pre lang="sh">
+# INFO: Using main config file /path/to/dehydrated/conf_dir/config
+ + Creating chain cache directory /path/to/dehydrated/conf_dir/chains
+Processing leela.example.com with alternative names: *.leela.example.com
+ + Creating new directory /path/to/dehydrated/conf_dir/certs/leela.example.com ...
  + Signing domains...
  + Generating private key...
  + Generating signing request...
  + Requesting new certificate order from CA...
  + Received 2 authorizations URLs from the CA
- + Handling authorization for io.example.com
- + Handling authorization for io.example.com
+ + Handling authorization for leela.example.com
+ + Handling authorization for leela.example.com
  + 2 pending challenge(s)
  + Deploying challenge tokens...
- + Hook: Deploying Token to dynv6.com for "io.example.com"
- + Hook: Sending payload to dynv6.com: {"name":"_acme-challenge.io","data":"ZaC4pBB2_pb0DuazXI1vTtzz-CJIXbAtAHBsOg3Tz","type":"TXT"}
+ + Hook: File 'public_suffix_list_sorted.dat' does not exist.
+ + Hook: Downloaded publicsuffix.org list to '/path/to/dehydrated/conf_dir/public_suffix_list_sorted.dat'
+ + Hook: Deploying Token to dynv6.com for "leela.example.com"
+ + Hook: Sending payload to dynv6.com: {"name":"_acme-challenge.leela","data":"TarEHkULpndP1Uqw9uh17rGGFn5Ufl6Cwwb81h4KbpN","type":"TXT"}
  + Hook: DNS entry added successfully, waiting for propagation...
- + Hook: Deploying Token to dynv6.com for "io.example.com"
- + Hook: Sending payload to dynv6.com: {"name":"_acme-challenge.io","data":"BhNdL7mHjUJRZnzscul83Dy3qwWY-Ddx6aPgRW4Bm","type":"TXT"}
+ + Hook: Deploying Token to dynv6.com for "leela.example.com"
+ + Hook: Sending payload to dynv6.com: {"name":"_acme-challenge.leela","data":"YI0TqmipxomVpbjyXqB4RY3Dn3RFrqLFV30Wk0aI3Tl","type":"TXT"}
  + Hook: DNS entry added successfully, waiting for propagation...
- + Responding to challenge for io.example.com authorization...
+ + Responding to challenge for leela.example.com authorization...
  + Challenge is valid!
- + Responding to challenge for io.example.com authorization...
+ + Responding to challenge for leela.example.com authorization...
  + Challenge is valid!
  + Cleaning challenge tokens...
- + Hook: Cleaning up challenge responses for "io.example.com" ...
+ + Hook: Cleaning up challenge responses for "leela.example.com" ...
  + Hook: Successfully deleted token at dynv6.com
  + Hook: Successfully deleted token at dynv6.com
  + Requesting certificate...
@@ -71,7 +96,39 @@ Processing io.example.com with alternative names: *.io.example.com
  + Done!
  + Creating fullchain.pem...
  + Done!
-```
+Processing example.com with alternative names: www.example.com
+ + Creating new directory /path/to/dehydrated/conf_dir/certs/example.com ...
+ + Signing domains...
+ + Generating private key...
+ + Generating signing request...
+ + Requesting new certificate order from CA...
+ + Received 2 authorizations URLs from the CA
+ + Handling authorization for example.com
+ + Handling authorization for www.example.com
+ + 2 pending challenge(s)
+ + Deploying challenge tokens...
+ + Hook: Deploying Token to dynv6.com for "example.com"
+ + Hook: Sending payload to dynv6.com: {"name":"_acme-challenge","data":"QETelufgzkgyPWzAeeI3s4Wod0pXSym4c4FFQo2AMqz","type":"TXT"}
+ + Hook: DNS entry added successfully, waiting for propagation...
+ + Hook: Deploying Token to dynv6.com for "www.example.com"
+ + Hook: Sending payload to dynv6.com: {"name":"_acme-challenge.www","data":"v5djCbh1YFKN97vOVY7zCApKznDWlS9MQuxSqvjkenA","type":"TXT"}
+ + Hook: DNS entry added successfully, waiting for propagation...
+ + Responding to challenge for example.com authorization...
+ + Challenge is valid!
+ + Responding to challenge for www.example.com authorization...
+ + Challenge is valid!
+ + Cleaning challenge tokens...
+ + Hook: Cleaning up challenge responses for "example.com" ...
+ + Hook: Successfully deleted token at dynv6.com
+ + Hook: Cleaning up challenge responses for "www.example.com" ...
+ + Hook: Successfully deleted token at dynv6.com
+ + Requesting certificate...
+ + Checking certificate...
+ + Done!
+ + Creating fullchain.pem...
+ + Done!
+</pre>
+</details>
 
 ## How to Contribute
 
