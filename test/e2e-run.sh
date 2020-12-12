@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)" 
-DEHYDRATED_VERSION="0.6.5"
+DEHYDRATED_VERSION="0.7.0"
 path_to_e2e_base_dir="${DIR}/e2e"
 path_to_conf_base_dir="${DIR}/e2e/conf_dir"
 
